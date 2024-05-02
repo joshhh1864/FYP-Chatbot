@@ -1,4 +1,4 @@
-def train_model():
+def train_model_svm():
     import pandas as pd
     import json
     from sklearn.model_selection import train_test_split, GridSearchCV
@@ -59,6 +59,82 @@ def train_model():
 
     # Save the vectorizer
     joblib.dump(vectorizer, "vectorizer.joblib")
+
+
+def train_model_RNN():
+    import json
+    import numpy as np
+    import nltk
+    from sklearn.model_selection import train_test_split
+    from sklearn.preprocessing import LabelEncoder
+    from keras.preprocessing.sequence import pad_sequences
+    from keras.models import Sequential
+    from keras.layers import Dense, Embedding, LSTM, SpatialDropout1D
+    from keras.optimizers import SGD
+    from keras.utils import to_categorical
+
+    with open("chatbot/intents.json", "r") as file:
+        data = json.load(file)
+
+    texts = []
+    labels = []
+
+    for intent in data["intents"]:
+        for pattern in intent["patterns"]:
+            texts.append(pattern)
+            labels.append(intent["tag"])
+
+    tokenized_texts = [nltk.word_tokenize(text.lower()) for text in texts]
+
+    word_index = {
+        word: idx + 1
+        for idx, word in enumerate(
+            set(word for text in tokenized_texts for word in text)
+        )
+    }
+    max_len = max(len(text) for text in tokenized_texts)
+    vocab_size = len(word_index) + 1
+
+    sequences = [[word_index[word] for word in text] for text in tokenized_texts]
+    X = pad_sequences(sequences, maxlen=max_len)
+    label_encoder = LabelEncoder()
+    Y = label_encoder.fit_transform(labels)
+    Y = to_categorical(Y)
+
+    model = Sequential()
+    model.add(Embedding(vocab_size, 100, input_length=max_len))
+    model.add(SpatialDropout1D(0.2))
+    model.add(LSTM(100, dropout=0.2, recurrent_dropout=0.2))
+    model.add(Dense(Y.shape[1], activation="softmax"))
+
+    sgd = SGD(learning_rate=0.01, decay=1e-6, momentum=0.9, nesterov=True)
+
+    model.compile(loss="categorical_crossentropy", optimizer=sgd, metrics=["accuracy"])
+
+    X_train, X_test, Y_train, Y_test = train_test_split(
+        X, Y, test_size=0.2, random_state=42
+    )
+    mist=model.fit(X_train, Y_train, epochs=200, batch_size=8, verbose =1)
+
+    loss, accuracy = model.evaluate(X_test, Y_test)
+    print(f"Test Loss: {loss}, Test Accuracy: {accuracy}")
+
+    with open('word_index.json', 'w') as f:
+        json.dump(word_index, f)
+
+    model.save("RNN_model.keras",mist)
+    print("Model saved.")
+
+    text="Hello"
+    tokenized_text = nltk.word_tokenize(text.lower())
+    sequence = [word_index[word] for word in tokenized_text if word in word_index]
+    padded_sequence = pad_sequences([sequence], maxlen=max_len)
+    prediction = model.predict(padded_sequence)
+    predicted_label = np.argmax(prediction)
+    print( label_encoder.inverse_transform([predicted_label])[0])
+
+
+
 
 
 def predict_intent():
@@ -190,6 +266,6 @@ def keyword_extraction(text):
     return meaningful_keywords
 
 
-# train_model()
-predict_intent()
-
+# train_model_svm()
+# predict_intent()
+train_model_RNN()

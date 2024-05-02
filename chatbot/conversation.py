@@ -6,41 +6,41 @@ import re
 from collections import Counter
 from nltk.corpus import stopwords
 import json
-import random
+import keras
+import nltk
+from keras.preprocessing.sequence import pad_sequences
 
+from keras.models import load_model
+model = load_model("RNN_model.keras")
+
+import numpy as np
 
 def find_response_by_intent(user_input, dataset):
     intents = json.loads(open('chatbot/intents.json').read())
-    # Load the trained SVM model
-    model = joblib.load("svm_model.joblib")
+    with open('word_index.json', 'r') as f:
+        word_index = json.load(f)
 
-    # Load vectorizer used during training
-    vectorizer = joblib.load("vectorizer.joblib")
-
-    input_strings =[user_input]
+    tokenized_text = nltk.word_tokenize(user_input.lower())
+    print(tokenized_text)
+    sequence = [word_index[word] for word in tokenized_text if word in word_index]
+    padded_sequence = pad_sequences([sequence], maxlen=255)
+    prediction = model.predict(padded_sequence)
+    predicted_label_idx = np.argmax(prediction)
+    print(predicted_label_idx)
     
-    # Vectorize the input strings
-    input_strings_vec = vectorizer.transform(input_strings)
+    # Get the predicted intent label
+    predicted_label = intents['intents'][predicted_label_idx]['tag']
+    print(predicted_label)
+    # Find the response corresponding to the predicted intent
+    response = None
+    for intent in intents['intents']:
+        if intent['tag'] == predicted_label:
+            response = np.random.choice(intent['responses'])
+            break
+    
+    return response
 
-    # Predict intents
-    predicted_intents = model.predict(input_strings_vec)
-
-    print(predicted_intents)
-
-    intent_list=[]
-    intent_list.append({"intent": predicted_intents})
-
-    if intent_list:
-        tag= intent_list[0]['intent']
-        list_of_intents = intents['intents']
-        for i in list_of_intents:
-            if i['tag'] == tag:
-                # Return the responses associated with the tag
-                result= random.choice(i['responses'])
-                break
-        return result
-    else:
-        return None
+    
 
 def find_response_by_keywords(user_input, dataset):
     user_input_tokens = user_input.lower().split()
