@@ -83,9 +83,9 @@ def train_model_RNN():
         for pattern in intent["patterns"]:
             texts.append(pattern)
             labels.append(intent["tag"])
-
+    
     tokenized_texts = [nltk.word_tokenize(text.lower()) for text in texts]
-
+    print(tokenized_texts)
     word_index = {
         word: idx + 1
         for idx, word in enumerate(
@@ -107,31 +107,29 @@ def train_model_RNN():
     model.add(LSTM(100, dropout=0.2, recurrent_dropout=0.2))
     model.add(Dense(Y.shape[1], activation="softmax"))
 
-    sgd = SGD(learning_rate=0.01, decay=1e-6, momentum=0.9, nesterov=True)
-
-    model.compile(loss="categorical_crossentropy", optimizer=sgd, metrics=["accuracy"])
+    model.compile(loss="categorical_crossentropy", optimizer="adam", metrics=["accuracy"])
 
     X_train, X_test, Y_train, Y_test = train_test_split(
         X, Y, test_size=0.2, random_state=42
     )
-    mist=model.fit(X_train, Y_train, epochs=200, batch_size=8, verbose =1)
+    mist=model.fit(X_train, Y_train, epochs=20, batch_size=5, verbose =1)
 
     loss, accuracy = model.evaluate(X_test, Y_test)
     print(f"Test Loss: {loss}, Test Accuracy: {accuracy}")
 
-    with open('word_index.json', 'w') as f:
-        json.dump(word_index, f)
+    # with open('word_index.json', 'w') as f:
+    #     json.dump(word_index, f)
 
-    model.save("RNN_model.keras",mist)
-    print("Model saved.")
+    # model.save("RNN_model.keras",mist)
+    # print("Model saved.")
 
-    text="Hello"
-    tokenized_text = nltk.word_tokenize(text.lower())
-    sequence = [word_index[word] for word in tokenized_text if word in word_index]
-    padded_sequence = pad_sequences([sequence], maxlen=max_len)
-    prediction = model.predict(padded_sequence)
-    predicted_label = np.argmax(prediction)
-    print( label_encoder.inverse_transform([predicted_label])[0])
+    # text="I hope to be happy"
+    # tokenized_text = nltk.word_tokenize(text.lower())
+    # sequence = [word_index[word] for word in tokenized_text if word in word_index]
+    # padded_sequence = pad_sequences([sequence], maxlen=max_len)
+    # prediction = model.predict(padded_sequence)
+    # predicted_label = np.argmax(prediction)
+    # print( label_encoder.inverse_transform([predicted_label])[0])
 
 
 
