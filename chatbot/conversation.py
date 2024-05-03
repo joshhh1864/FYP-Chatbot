@@ -6,39 +6,22 @@ import re
 from collections import Counter
 from nltk.corpus import stopwords
 import json
-import keras
 import nltk
+from nltk.stem import WordNetLemmatizer
+lemmatizer = WordNetLemmatizer()
 from keras.preprocessing.sequence import pad_sequences
 
 from keras.models import load_model
-model = load_model("RNN_model.keras")
+model = load_model("modelN.keras")
 
 import numpy as np
 
 def find_response_by_intent(user_input, dataset):
     intents = json.loads(open('chatbot/intents.json').read())
-    with open('word_index.json', 'r') as f:
-        word_index = json.load(f)
 
-    tokenized_text = nltk.word_tokenize(user_input.lower())
-    print(tokenized_text)
-    sequence = [word_index[word] for word in tokenized_text if word in word_index]
-    padded_sequence = pad_sequences([sequence], maxlen=255)
-    prediction = model.predict(padded_sequence)
-    predicted_label_idx = np.argmax(prediction)
-    print(predicted_label_idx)
-    
-    # Get the predicted intent label
-    predicted_label = intents['intents'][predicted_label_idx]['tag']
-    print(predicted_label)
-    # Find the response corresponding to the predicted intent
-    response = None
-    for intent in intents['intents']:
-        if intent['tag'] == predicted_label:
-            response = np.random.choice(intent['responses'])
-            break
-    
-    return response
+    sentence_words = nltk.word_tokenize(user_input)
+    sentence_words = [user_input.lemmatize(word.lower()) for word in sentence_words]
+
 
     
 

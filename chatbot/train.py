@@ -65,74 +65,76 @@ def train_model_RNN():
     import json
     import numpy as np
     import nltk
+    from nltk.stem import WordNetLemmatizer
+    lemmatizer = WordNetLemmatizer()
     from sklearn.model_selection import train_test_split
     from sklearn.preprocessing import LabelEncoder
     from keras.preprocessing.sequence import pad_sequences
     from keras.models import Sequential
-    from keras.layers import Dense, Embedding, LSTM, SpatialDropout1D
+    from keras.layers import Dense, Embedding, LSTM, SpatialDropout1D, Dropout
     from keras.optimizers import SGD
     from keras.utils import to_categorical
+    import random
 
     with open("chatbot/intents.json", "r") as file:
         data = json.load(file)
 
-    texts = []
+    avoid_words=['?','!']
+
+    words = []
     labels = []
+    documents = []
 
     for intent in data["intents"]:
         for pattern in intent["patterns"]:
-            texts.append(pattern)
-            labels.append(intent["tag"])
-    
-    tokenized_texts = [nltk.word_tokenize(text.lower()) for text in texts]
-    print(tokenized_texts)
-    word_index = {
-        word: idx + 1
-        for idx, word in enumerate(
-            set(word for text in tokenized_texts for word in text)
-        )
-    }
-    max_len = max(len(text) for text in tokenized_texts)
-    vocab_size = len(word_index) + 1
+            w = nltk.word_tokenize(pattern)
+            words.extend(w)
+            documents.append((w, intent['tag']))
+            if intent['tag'] not in labels: 
+                labels.append(intent['tag'])
 
-    sequences = [[word_index[word] for word in text] for text in tokenized_texts]
-    X = pad_sequences(sequences, maxlen=max_len)
-    label_encoder = LabelEncoder()
-    Y = label_encoder.fit_transform(labels)
-    Y = to_categorical(Y)
+    words = [lemmatizer.lemmatize(w.lower()) for w in words if w not in avoid_words]
+    words = sorted(list(set(words)))
+
+    labels = sorted(list(set(labels)))
+
+    training = []
+
+    for doc in documents:
+       # Initialize bag of words
+        bag = []
+        # Tokenize and lemmatize the words in the pattern
+        pattern_words = [lemmatizer.lemmatize(word.lower()) for word in doc[0]]
+        # Create bag of words array
+        for word in words:
+            bag.append(1) if word in pattern_words else bag.append(0)
+        
+        # Initialize output row
+        output_row = list([0] * len(labels))
+        # Set the index corresponding to the intent tag to 1
+        output_row[labels.index(doc[1])] = 1
+        
+        # Append bag of words and output row to training data
+        training.append([bag, output_row])
+
+    random.shuffle(training)
+    training=np.array(training, dtype=object)
+
+    train_x = list(training[:,0])
+    train_y = list(training[:,1])
 
     model = Sequential()
-    model.add(Embedding(vocab_size, 100, input_length=max_len))
-    model.add(SpatialDropout1D(0.2))
-    model.add(LSTM(100, dropout=0.2, recurrent_dropout=0.2))
-    model.add(Dense(Y.shape[1], activation="softmax"))
+    model.add(Dense(128, input_shape=(len(train_x[0]),), activation='relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(64, activation='relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(len(train_y[0]), activation='softmax'))
 
-    model.compile(loss="categorical_crossentropy", optimizer="adam", metrics=["accuracy"])
+    model.compile(loss='categorical_crossentropy', optimizer="adam", metrics=['accuracy'])
 
-    X_train, X_test, Y_train, Y_test = train_test_split(
-        X, Y, test_size=0.2, random_state=42
-    )
-    mist=model.fit(X_train, Y_train, epochs=20, batch_size=5, verbose =1)
-
-    loss, accuracy = model.evaluate(X_test, Y_test)
-    print(f"Test Loss: {loss}, Test Accuracy: {accuracy}")
-
-    # with open('word_index.json', 'w') as f:
-    #     json.dump(word_index, f)
-
-    # model.save("RNN_model.keras",mist)
-    # print("Model saved.")
-
-    # text="I hope to be happy"
-    # tokenized_text = nltk.word_tokenize(text.lower())
-    # sequence = [word_index[word] for word in tokenized_text if word in word_index]
-    # padded_sequence = pad_sequences([sequence], maxlen=max_len)
-    # prediction = model.predict(padded_sequence)
-    # predicted_label = np.argmax(prediction)
-    # print( label_encoder.inverse_transform([predicted_label])[0])
-
-
-
+    hist = model.fit(np.array(train_x), np.array(train_y), epochs=200, batch_size=5, verbose=1)
+    model.save('modelN.keras', hist)
+    print("model created")
 
 
 def predict_intent():
