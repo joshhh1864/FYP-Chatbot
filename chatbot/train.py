@@ -75,6 +75,7 @@ def train_model_RNN():
     from keras.optimizers import SGD
     from keras.utils import to_categorical
     import random
+    import pickle
 
     with open("chatbot/intents.json", "r") as file:
         data = json.load(file)
@@ -97,6 +98,9 @@ def train_model_RNN():
     words = sorted(list(set(words)))
 
     labels = sorted(list(set(labels)))
+
+    pickle.dump(words,open('texts.pkl','wb'))
+    pickle.dump(labels,open('labels.pkl','wb'))
 
     training = []
 
