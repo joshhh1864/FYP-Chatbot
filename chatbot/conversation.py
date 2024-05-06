@@ -8,9 +8,9 @@ from nltk.corpus import stopwords
 import json
 import nltk
 from nltk.stem import WordNetLemmatizer
+lemmatizer = WordNetLemmatizer()
 import random
 
-lemmatizer = WordNetLemmatizer()
 from keras.preprocessing.sequence import pad_sequences
 import pickle
 

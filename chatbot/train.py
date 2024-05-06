@@ -144,41 +144,55 @@ def train_model_RNN():
 def predict_intent():
     import pandas as pd
     import joblib
+    import pickle
+    import nltk
+    from nltk.stem import WordNetLemmatizer
+    lemmatizer = WordNetLemmatizer()
+    import numpy as np
+    from keras.models import load_model
+    modelKeras = load_model("modelN.keras")
 
     other_dataset_df = pd.read_csv("datasets/train.csv")
+
+    words = pickle.load(open("texts.pkl", "rb"))
+    labels = pickle.load(open("labels.pkl", "rb"))
 
     # Preprocess text data
     other_dataset_df["Cleaned_Context"] = other_dataset_df["Context"].apply(
         preprocess_text
     )
 
-    # Load the trained SVM model
-    model = joblib.load("svm_model.joblib")
-
-    # Load vectorizer used during training
-    vectorizer = joblib.load("vectorizer.joblib")
-
-    # Prepare data for prediction
-    X_other = other_dataset_df["Cleaned_Context"]
-
-    # Vectorize the features
-    X_other_vec = vectorizer.transform(X_other)
-
-    # Predict intents
-    predicted_intents = model.predict(X_other_vec)
-
-    # Add predicted intents to the dataset
-    other_dataset_df["predicted_intent"] = predicted_intents
-
     other_dataset_df["mental_health_keywords"] = other_dataset_df["Context"].apply(
         keyword_extraction
     )
+
+    predictions = []
+    for index, row in other_dataset_df.iterrows():
+        lemmatized_sentence = [
+            lemmatizer.lemmatize(word.lower()) for word in nltk.word_tokenize(row['Context'])
+        ]
+
+        # Create bag-of-words representation
+        input_bag = [1 if word in lemmatized_sentence else 0 for word in words]
+
+        # Reshape input for prediction
+        input_bag = np.array(input_bag).reshape(1, -1)
+
+        # Make prediction
+        predicted_probabilities = modelKeras.predict(input_bag)
+        predicted_class_index = np.argmax(predicted_probabilities[0])
+        predicted_class = labels[predicted_class_index]
+        
+        predictions.append(predicted_class)
+
+    # Add predicted intents to the dataset
+    other_dataset_df["predicted_intent"] = predictions
 
     # Save the dataset with predicted intents
     other_dataset_df.to_csv("dataset_with_predicted_intents.csv", index=False)
 
     # Visualize predicted intents
-    predicted_intent_visualisation(other_dataset_df)
+    # predicted_intent_visualisation(other_dataset_df)
 
 
 def preprocess_text(text):
@@ -271,5 +285,5 @@ def keyword_extraction(text):
 
 
 # train_model_svm()
-# predict_intent()
-train_model_RNN()
+predict_intent()
+# train_model_RNN()
