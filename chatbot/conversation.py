@@ -1,6 +1,5 @@
 import pandas as pd
 import ast
-import joblib
 from keywords import MENTAL_HEALTH_KEYWORDS
 import re
 from collections import Counter
@@ -8,6 +7,7 @@ from nltk.corpus import stopwords
 import json
 import nltk
 from nltk.stem import WordNetLemmatizer
+
 lemmatizer = WordNetLemmatizer()
 import random
 
@@ -15,12 +15,14 @@ from keras.preprocessing.sequence import pad_sequences
 import pickle
 
 from keras.models import load_model
+
 model = load_model("modelN.keras")
 
 import numpy as np
 
+dataset = pd.read_csv("dataset_with_predicted_intents.csv")
 
-def find_response_by_intent(user_input, dataset):
+def get_response(user_input, dataset):
     intents = json.loads(open("chatbot/intents.json").read())
     words = pickle.load(open("texts.pkl", "rb"))
     labels = pickle.load(open("labels.pkl", "rb"))
@@ -40,49 +42,37 @@ def find_response_by_intent(user_input, dataset):
     predicted_class_index = np.argmax(predicted_probabilities[0])
     predicted_class = labels[predicted_class_index]
 
+    responses=[]
+
     intent_list = intents["intents"]
     for i in intent_list:
         if i["tag"] == predicted_class:
             response = random.choice(i["responses"])
-            return response
+            responses.append(response)
+            advice = get_advice(dataset,predicted_class)
+            if advice:
+                responses.append(advice)
+            return responses
 
     return None
 
 
-def find_response_by_keywords(user_input, dataset):
-    user_input_tokens = user_input.lower().split()
-
-    matching_keywords = []
-
-    user_input_tokens = [re.sub(r"[^\w\s]", "", token) for token in user_input_tokens]
-
-    for token in user_input_tokens:
-        # Check if the token is a mental health keyword
-        if token.lower() in MENTAL_HEALTH_KEYWORDS:
-            matching_keywords.append(token)
-
-    if matching_keywords == []:
-        return None
-
+def get_advice(dataset, predicted_class):
     matching_responses = []
-
+    print(predicted_class)
     # Iterate over each row in the dataset
     for index, row in dataset.iterrows():
-        # Parse the string representation of keywords into a list
-        keywords = ast.literal_eval(row["mental_health_keywords"])
-
-        if keywords == matching_keywords:
+        if row["predicted_intent"] == predicted_class:
             matching_responses.append(row["Response"])
 
     if matching_responses:
-        print("Rule2")
-        return matching_responses[0]
+        return random.choice(matching_responses)
     else:
         return None
 
 
 def find_response_by_context(user_input, dataset):
-    negated_tokens= handle_negation(user_input)
+    negated_tokens = handle_negation(user_input)
     stop_words = set(stopwords.words("english"))
 
     # Count the occurrence of each token in user input
@@ -112,6 +102,7 @@ def find_response_by_context(user_input, dataset):
             best_match_count = shared_words_count
             best_match_response = row["Response"]
     return best_match_response
+
 
 def handle_negation(user_input):
     NEGATION_TERMS = ["not", "no", "never"]
@@ -152,26 +143,19 @@ def default_response():
 
 
 def chatbot_response(user_input, dataset):
-    # Rule 1: If keywords not found, check response based on predicted intent
-    response = find_response_by_intent(user_input, dataset)
+    responses = []
+    response = get_response(user_input, dataset)
     if response:
-        return response
+        responses.extend(response)
 
-    # Rule 2: Check if the user input contains keywords and find response
-    response = find_response_by_keywords(user_input, dataset)
-    if response:
-        return response
+    # response = get_advice(user_input, dataset)
+    # if response:
+    #     responses.extend(response)
 
-    # Rule 3: If no appropriate response found, try based on cleaned context
-    response = find_response_by_context(user_input, dataset)
-    if response:
-        return response
+    if not responses:
+        return default_response()
 
-    # Rule 4: If all else fails, return default response
-    return default_response()
-
-
-dataset = pd.read_csv("dataset_with_predicted_intents.csv")
+    return responses
 
 print("Hello! I'm a simple chatbot. How can I help you?")
 while True:
@@ -180,5 +164,10 @@ while True:
         print("Goodbye!")
         break
     else:
-        response = chatbot_response(user_input, dataset)
-        print("Bot:", response)
+        responses = chatbot_response(user_input, dataset)
+        if responses:
+            print("Bot:")
+            for response in responses:
+                print("-", response)
+        else:
+            print("Bot: Sorry, I couldn't understand that.")
