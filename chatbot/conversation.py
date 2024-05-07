@@ -6,41 +6,48 @@ import re
 from collections import Counter
 from nltk.corpus import stopwords
 import json
+import nltk
+from nltk.stem import WordNetLemmatizer
+lemmatizer = WordNetLemmatizer()
 import random
+
+from keras.preprocessing.sequence import pad_sequences
+import pickle
+
+from keras.models import load_model
+model = load_model("modelN.keras")
+
+import numpy as np
 
 
 def find_response_by_intent(user_input, dataset):
-    intents = json.loads(open('chatbot/intents.json').read())
-    # Load the trained SVM model
-    model = joblib.load("svm_model.joblib")
+    intents = json.loads(open("chatbot/intents.json").read())
+    words = pickle.load(open("texts.pkl", "rb"))
+    labels = pickle.load(open("labels.pkl", "rb"))
 
-    # Load vectorizer used during training
-    vectorizer = joblib.load("vectorizer.joblib")
+    lemmatized_sentence = [
+        lemmatizer.lemmatize(word.lower()) for word in nltk.word_tokenize(user_input)
+    ]
 
-    input_strings =[user_input]
-    
-    # Vectorize the input strings
-    input_strings_vec = vectorizer.transform(input_strings)
+    # Create bag-of-words representation
+    input_bag = [1 if word in lemmatized_sentence else 0 for word in words]
 
-    # Predict intents
-    predicted_intents = model.predict(input_strings_vec)
+    # Reshape input for prediction
+    input_bag = np.array(input_bag).reshape(1, -1)
 
-    print(predicted_intents)
+    # Make prediction
+    predicted_probabilities = model.predict(input_bag)
+    predicted_class_index = np.argmax(predicted_probabilities[0])
+    predicted_class = labels[predicted_class_index]
 
-    intent_list=[]
-    intent_list.append({"intent": predicted_intents})
+    intent_list = intents["intents"]
+    for i in intent_list:
+        if i["tag"] == predicted_class:
+            response = random.choice(i["responses"])
+            return response
 
-    if intent_list:
-        tag= intent_list[0]['intent']
-        list_of_intents = intents['intents']
-        for i in list_of_intents:
-            if i['tag'] == tag:
-                # Return the responses associated with the tag
-                result= random.choice(i['responses'])
-                break
-        return result
-    else:
-        return None
+    return None
+
 
 def find_response_by_keywords(user_input, dataset):
     user_input_tokens = user_input.lower().split()
@@ -73,38 +80,10 @@ def find_response_by_keywords(user_input, dataset):
     else:
         return None
 
+
 def find_response_by_context(user_input, dataset):
-    # Define negation terms
-    NEGATION_TERMS = ["not", "no", "never"]
-
-    # Split user input into tokens
-    user_input_tokens = user_input.lower().split()
-
-    negated_tokens = []
-
-    # Initialize a flag to track negation state
-    negation_flag = False
-
-    # Iterate through tokens
-    for token in user_input_tokens:
-        # Check if token is a negation term
-        if token in NEGATION_TERMS:
-            # Toggle the negation flag
-            negation_flag = not negation_flag
-            continue
-
-        # If the current token is not negated, add it to the list of negated tokens
-        if not negation_flag:
-            # Remove punctuation from the token
-            token = re.sub(r"[^\w\s]", "", token)
-            negated_tokens.append(token)
-        else:
-            # Prefix the negated word with "not_"
-            negated_tokens.append("not_" + token)
-
-    # Remove stopwords
+    negated_tokens= handle_negation(user_input)
     stop_words = set(stopwords.words("english"))
-    negated_tokens = [word for word in negated_tokens if word not in stop_words]
 
     # Count the occurrence of each token in user input
     user_input_counter = Counter(negated_tokens)
@@ -133,6 +112,39 @@ def find_response_by_context(user_input, dataset):
             best_match_count = shared_words_count
             best_match_response = row["Response"]
     return best_match_response
+
+def handle_negation(user_input):
+    NEGATION_TERMS = ["not", "no", "never"]
+
+    user_input_tokens = user_input.lower().split()
+
+    negated_tokens = []
+
+    # Initialize a flag to track negation state
+    negation_flag = False
+
+    # Iterate through tokens
+    for token in user_input_tokens:
+        # Check if token is a negation term
+        if token in NEGATION_TERMS:
+            # Toggle the negation flag
+            negation_flag = not negation_flag
+            continue
+
+        # If the current token is not negated, add it to the list of negated tokens
+        if not negation_flag:
+            # Remove punctuation from the token
+            token = re.sub(r"[^\w\s]", "", token)
+            negated_tokens.append(token)
+        else:
+            # Prefix the negated word with "not_"
+            negated_tokens.append("not_" + token)
+
+    # Remove stopwords
+    stop_words = set(stopwords.words("english"))
+    negated_tokens = [word for word in negated_tokens if word not in stop_words]
+
+    return negated_tokens
 
 
 def default_response():
@@ -170,4 +182,3 @@ while True:
     else:
         response = chatbot_response(user_input, dataset)
         print("Bot:", response)
-
