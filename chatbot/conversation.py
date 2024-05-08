@@ -22,6 +22,22 @@ import numpy as np
 
 dataset = pd.read_csv("dataset_with_predicted_intents.csv")
 
+def keyword_extraction(user_input):
+    user_input_tokens = user_input.lower().split()
+
+    matching_keywords = []
+
+    user_input_tokens = [re.sub(r"[^\w\s]", "", token) for token in user_input_tokens]
+
+    for token in user_input_tokens:
+        if token.lower() in MENTAL_HEALTH_KEYWORDS:
+            matching_keywords.append(token)
+
+    if matching_keywords == []:
+        return None
+
+    return matching_keywords
+
 def get_response(user_input, dataset):
     intents = json.loads(open("chatbot/intents.json").read())
     words = pickle.load(open("texts.pkl", "rb"))
@@ -42,100 +58,37 @@ def get_response(user_input, dataset):
     predicted_class_index = np.argmax(predicted_probabilities[0])
     predicted_class = labels[predicted_class_index]
 
-    responses=[]
+    responses = []
 
     intent_list = intents["intents"]
     for i in intent_list:
         if i["tag"] == predicted_class:
             response = random.choice(i["responses"])
             responses.append(response)
-            advice = get_advice(dataset,predicted_class)
-            if advice:
-                responses.append(advice)
+            if predicted_class != "greeting":
+                keywords = keyword_extraction(user_input)
+                advice = get_advice(dataset, predicted_class, keywords)
+                if advice:
+                    responses.append(advice)
+                return responses
             return responses
-
     return None
 
 
-def get_advice(dataset, predicted_class):
+def get_advice(dataset, predicted_class, found_keywords):
     matching_responses = []
-    print(predicted_class)
+    print(found_keywords)
     # Iterate over each row in the dataset
     for index, row in dataset.iterrows():
-        if row["predicted_intent"] == predicted_class:
+        keywords = ast.literal_eval(row["mental_health_keywords"])
+        if row["predicted_intent"] == predicted_class and keywords == found_keywords:
+            print("yes",found_keywords)
             matching_responses.append(row["Response"])
-
+        
     if matching_responses:
         return random.choice(matching_responses)
     else:
         return None
-
-
-def find_response_by_context(user_input, dataset):
-    negated_tokens = handle_negation(user_input)
-    stop_words = set(stopwords.words("english"))
-
-    # Count the occurrence of each token in user input
-    user_input_counter = Counter(negated_tokens)
-    best_match_count = 0
-    best_match_response = None
-
-    # Iterate over each row in the dataset
-    for index, row in dataset.iterrows():
-        # Split the cleaned context into tokens
-        context_tokens = row["Cleaned_Context"].lower().split()
-
-        # Remove punctuation from context tokens
-        context_tokens = [re.sub(r"[^\w\s]", "", token) for token in context_tokens]
-
-        # Remove stopwords from context tokens
-        context_tokens = [token for token in context_tokens if token not in stop_words]
-
-        # Count the occurrence of each token in the context
-        context_counter = Counter(context_tokens)
-
-        # Calculate the number of shared words between user input and context
-        shared_words_count = sum((user_input_counter & context_counter).values())
-
-        # Update best match if the current row has more shared words
-        if shared_words_count > best_match_count:
-            best_match_count = shared_words_count
-            best_match_response = row["Response"]
-    return best_match_response
-
-
-def handle_negation(user_input):
-    NEGATION_TERMS = ["not", "no", "never"]
-
-    user_input_tokens = user_input.lower().split()
-
-    negated_tokens = []
-
-    # Initialize a flag to track negation state
-    negation_flag = False
-
-    # Iterate through tokens
-    for token in user_input_tokens:
-        # Check if token is a negation term
-        if token in NEGATION_TERMS:
-            # Toggle the negation flag
-            negation_flag = not negation_flag
-            continue
-
-        # If the current token is not negated, add it to the list of negated tokens
-        if not negation_flag:
-            # Remove punctuation from the token
-            token = re.sub(r"[^\w\s]", "", token)
-            negated_tokens.append(token)
-        else:
-            # Prefix the negated word with "not_"
-            negated_tokens.append("not_" + token)
-
-    # Remove stopwords
-    stop_words = set(stopwords.words("english"))
-    negated_tokens = [word for word in negated_tokens if word not in stop_words]
-
-    return negated_tokens
 
 
 def default_response():
@@ -148,14 +101,11 @@ def chatbot_response(user_input, dataset):
     if response:
         responses.extend(response)
 
-    # response = get_advice(user_input, dataset)
-    # if response:
-    #     responses.extend(response)
-
     if not responses:
         return default_response()
 
     return responses
+
 
 print("Hello! I'm a simple chatbot. How can I help you?")
 while True:
@@ -167,7 +117,9 @@ while True:
         responses = chatbot_response(user_input, dataset)
         if responses:
             print("Bot:")
-            for response in responses:
-                print("-", response)
+            print(responses[0])
+            if (len(responses)==2):
+                print("Professional's Advice: ", responses[1]   )
+
         else:
             print("Bot: Sorry, I couldn't understand that.")
