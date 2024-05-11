@@ -255,9 +255,13 @@ def keyword_extraction(text):
     from nltk.corpus import stopwords
     from nltk.tokenize import word_tokenize
     from collections import Counter
-    from keywords import MENTAL_HEALTH_KEYWORDS
+    import json
 
-    mental_health_keywords = MENTAL_HEALTH_KEYWORDS
+    with open("keywords.json", 'r') as file:
+        data = json.load(file)
+        mental_health_keywords = data['MENTAL_HEALTH_KEYWORDS']
+
+    extracted_mental_health_keywords = mental_health_keywords
 
     # Remove punctuation
     text = text.translate(str.maketrans("", "", string.punctuation))
@@ -274,7 +278,7 @@ def keyword_extraction(text):
 
     # Extract mental health keywords from filtered tokens
     mental_health_filtered_tokens = [
-        word for word in filtered_tokens if word in mental_health_keywords
+        word for word in filtered_tokens if word in extracted_mental_health_keywords
     ]
 
     keyword_counts = Counter(mental_health_filtered_tokens)

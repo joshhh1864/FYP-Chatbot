@@ -4,15 +4,31 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Modern Design</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles/home.css') }}" />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles/home.css') }}"
+    />
   </head>
   <body>
-    <div class="header">
-        <div class="header-text">
-        <!-- <img src="static/img/header_img.jpg" alt="Header Image"> -->
-          <h1>Your Title Here</h1>
-          <p>Your subtitle or description here</p>
-        </div>
+    <div class="container">
+      <div class="header">
+        <h2>Chatbot</h2>
       </div>
+
+      <div class="chat-container" id="chat-container">
+        <!-- Chat messages will appear here -->
+      </div>
+
+      <div class="chat-input">
+        <input
+          type="text"
+          id="user-input"
+          class="input-field"
+          placeholder="Type your message..."
+        />
+        <button class="btn-send" onclick="sendMessage()">&#10148;</button>
+      </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/runbot.js') }}"></script>
   </body>
 </html>

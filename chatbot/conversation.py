@@ -23,6 +23,10 @@ import numpy as np
 dataset = pd.read_csv("dataset_with_predicted_intents.csv")
 
 def keyword_extraction(user_input):
+    with open("keywords.json", 'r') as file:
+        data = json.load(file)
+        mental_health_keywords = data['MENTAL_HEALTH_KEYWORDS']
+
     user_input_tokens = user_input.lower().split()
 
     matching_keywords = []
@@ -30,7 +34,7 @@ def keyword_extraction(user_input):
     user_input_tokens = [re.sub(r"[^\w\s]", "", token) for token in user_input_tokens]
 
     for token in user_input_tokens:
-        if token.lower() in MENTAL_HEALTH_KEYWORDS:
+        if token.lower() in mental_health_keywords:
             matching_keywords.append(token)
 
     if matching_keywords == []:
@@ -59,7 +63,7 @@ def get_response(user_input, dataset):
     predicted_class = labels[predicted_class_index]
 
     responses = []
-
+    print(predicted_class)
     intent_list = intents["intents"]
     for i in intent_list:
         if i["tag"] == predicted_class:
