@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Modern Design</title>
+    <title>WellSpring</title>
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='styles/home.css') }}"
@@ -16,7 +16,8 @@
       </div>
 
       <div class="chat-container" id="chat-container">
-        <!-- Chat messages will appear here -->
+        <!-- Initial chat message -->
+        <div class="message">Hello! my name is Wyll. How can I help you?</div>
       </div>
 
       <div class="chat-input">
@@ -26,7 +27,7 @@
           class="input-field"
           placeholder="Type your message..."
         />
-        <button class="btn-send" onclick="sendMessage()">&#10148;</button>
+        <button class="btn-send" onclick="sendMessage()" >&#10148;</button>
       </div>
     </div>
     <script src="{{ url_for('static', filename='js/runbot.js') }}"></script>
