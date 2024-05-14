@@ -37,11 +37,20 @@ function sendMessage() {
     .then((data) => {
       console.log(data.bot_response);
 
-      var chatContainer = document.getElementById("chat-container");
-      var botMessageElement = document.createElement("div");
-      botMessageElement.classList.add("message", "bot-message");
-      botMessageElement.textContent = data.bot_response;
-      chatContainer.appendChild(botMessageElement);
+      if (Array.isArray(data.bot_response)) {
+        data.bot_response.forEach((response) => {
+          var botMessageElement = document.createElement("div");
+          botMessageElement.classList.add("message", "bot-message");
+          botMessageElement.textContent = response;
+          chatContainer.appendChild(botMessageElement);
+        });
+      } else {
+        // If the response is not an array, handle it as a single message
+        var botMessageElement = document.createElement("div");
+        botMessageElement.classList.add("message", "bot-message");
+        botMessageElement.textContent = data.bot_response;
+        chatContainer.appendChild(botMessageElement);
+      }
       // Scroll to the bottom of the chat container
       chatContainer.scrollTop = chatContainer.scrollHeight;
     });
