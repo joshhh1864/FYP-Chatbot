@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WellSpring</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles/home.css') }}"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h2>Chatbot</h2>
+      </div>
+
+      <div class="chat-container" id="chat-container">
+        <!-- Initial chat message -->
+        <div class="message">Hello! my name is Wyll. How can I help you?</div>
+      </div>
+
+      <div class="chat-input">
+        <input
+          type="text"
+          id="user-input"
+          class="input-field"
+          placeholder="Type your message..."
+        />
+        <button class="btn-send" onclick="sendMessage()" >&#10148;</button>
+      </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/runbot.js') }}"></script>
+  </body>
+</html>

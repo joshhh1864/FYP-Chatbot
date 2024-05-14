@@ -1,6 +1,6 @@
+from flask import Flask, render_template, request, jsonify
 import pandas as pd
 import ast
-from keywords import MENTAL_HEALTH_KEYWORDS
 import re
 from collections import Counter
 from nltk.corpus import stopwords
@@ -21,6 +21,36 @@ model = load_model("modelN.keras")
 import numpy as np
 
 dataset = pd.read_csv("dataset_with_predicted_intents.csv")
+
+app = Flask(__name__)
+
+@app.route("/")
+def home():
+    return render_template("index.html")
+
+@app.route('/send_message', methods=['POST'])
+def send_message():
+    # Get user input from the request
+    user_input = request.json.get('user_input')
+
+    if user_input is None:
+        return jsonify({'error': 'No user input provided'}), 400
+    
+    bot_response = chatbot_response(user_input)
+
+    # Return the bot response as JSON
+    return jsonify({'bot_response': bot_response})
+
+def chatbot_response(user_input):
+    responses = []
+    response = get_response(user_input, dataset)
+    if response:
+        responses.extend(response)
+
+    if not responses:
+        return "Sorry, I do not understand the question."
+
+    return responses
 
 def keyword_extraction(user_input):
     with open("keywords.json", 'r') as file:
@@ -78,7 +108,6 @@ def get_response(user_input, dataset):
             return responses
     return None
 
-
 def get_advice(dataset, predicted_class, found_keywords):
     matching_responses = []
     print(found_keywords)
@@ -94,36 +123,5 @@ def get_advice(dataset, predicted_class, found_keywords):
     else:
         return None
 
-
-def default_response():
-    return "Sorry, I do not understand the question."
-
-
-def chatbot_response(user_input, dataset):
-    responses = []
-    response = get_response(user_input, dataset)
-    if response:
-        responses.extend(response)
-
-    if not responses:
-        return default_response()
-
-    return responses
-
-
-print("Hello! I'm a simple chatbot. How can I help you?")
-while True:
-    user_input = input("You: ")
-    if user_input.lower() in ["quit", "exit", "bye"]:
-        print("Goodbye!")
-        break
-    else:
-        responses = chatbot_response(user_input, dataset)
-        if responses:
-            print("Bot:")
-            print(responses[0])
-            if (len(responses)==2):
-                print("Professional's Advice: ", responses[1]   )
-
-        else:
-            print("Bot: Sorry, I couldn't understand that.")
+if __name__ == '__main__':
+    app.run(debug=True)
