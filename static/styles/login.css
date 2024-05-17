@@ -5,6 +5,8 @@ body {
     justify-content: center;
     align-items: center;
     height: 100vh;
+    background-image: url('../img/login_bg2.jpg');
+    background-size: 100% 100%;
     margin: 0;
 }
 
@@ -18,64 +20,47 @@ body {
 }
 
 .signup-form {
-    padding: 40px;
+    padding: 30px;
     flex: 1;
 }
 
-.signup-form h2 {
-    margin-bottom: 20px;
-}
-
 .input-group {
-    margin-bottom: 15px;
+    margin-bottom: 25px;
 }
 
 .input-group input {
-    width: 100%;
+    width: 87%;
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 4px;
-}
-
-.terms {
-    margin: 20px 0;
-    font-size: 14px;
-}
-
-.terms input {
-    margin-right: 10px;
-}
-
-.terms a {
-    color: #007bff;
-    text-decoration: none;
-}
-
-.terms a:hover {
-    text-decoration: underline;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid #25302E;
 }
 
 button {
-    width: 100%;
-    padding: 10px;
+    height: 40px;
+    width: 94%;
     border: none;
-    background-color: #007bff;
+    background-color: #498586;
     color: #fff;
     border-radius: 4px;
     cursor: pointer;
 }
 
 button:hover {
-    background-color: #0056b3;
+    background-color: #7C9591;
 }
 
 p {
+    font-size: small;
     text-align: center;
     margin-top: 20px;
 }
 
 p a {
-    color: #007bff;
+    font-size: small;
+    color: #498586;
     text-decoration: none;
 }
 
@@ -84,11 +69,9 @@ p a:hover {
 }
 
 .illustration {
-    flex: 1;
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 40px;
     background-color: #fafafa;
     border-top-right-radius: 8px;
     border-bottom-right-radius: 8px;
@@ -98,3 +81,8 @@ p a:hover {
     max-width: 100%;
     border-radius: 8px;
 }
+
+.flex-container {
+    display: flex;
+}
+

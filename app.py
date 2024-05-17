@@ -101,6 +101,10 @@ def add_user(username, email, password, user_type_name):
 def home():
     return render_template("login.html")
 
+@app.route("/register")
+def register():
+    return render_template("register.html")
+
 @app.route("/chatbot")
 def chatbot():
     return render_template("index.html")
