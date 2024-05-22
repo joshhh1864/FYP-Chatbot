@@ -44,7 +44,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password = db.Column(db.String(120), unique=True, nullable=False)
+    password = db.Column(db.String(120), nullable=False)
     user_type = db.Column(db.Integer, db.ForeignKey("user_type.id"), nullable=False)
 
     user_type_relation = db.relationship(
@@ -73,7 +73,26 @@ def init_db():
 
 # User DB Manip ---------------------------------------
 # Register User
-@app.route("/add_user/<username>/<email>/<password>/<user_type_name>")
+@app.route("/register/new_user", methods=["POST"])
+def register_new_user():
+    data = request.get_json()
+
+    if not data:
+        return jsonify({"error": "Invalid input"}), 400
+
+    username = data.get("name")
+    email = data.get("email")
+    password = data.get("password")
+    user_type_name = "Regular"  # assuming a default user type for registration
+
+    result = add_user(username, email, password, user_type_name)
+
+    if "successfully" in result:
+        return jsonify({"message": result}), 201
+    else:
+        return jsonify({"error": result}), 400
+
+
 def add_user(username, email, password, user_type_name):
     try:
         with app.app_context():
@@ -92,7 +111,40 @@ def add_user(username, email, password, user_type_name):
     except Exception as e:
         return f"An error occurred: {e}"
 
-#Login User
+
+# Login User
+@app.route("/login", methods=["POST"])
+def login_user():
+    data = request.get_json()
+
+    if not data:
+        return jsonify({"error": "Invalid input"}), 400
+
+    email = data.get("email")
+    password = data.get("password")
+
+    result = auth_user(email, password)
+
+    if "successfully" in result:
+        return jsonify({"message": result}), 201
+    else:
+        return jsonify({"error": result}), 400
+
+
+def auth_user(email, password):
+    try:
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            return "User not found."
+
+        if not user.password == password:
+            return "Incorrect password."
+
+        return "User authenticated successfully."
+    except Exception as e:
+        return f"An error occurred: {e}"
+
+
 # -----------------------------------------------------
 
 
@@ -101,13 +153,16 @@ def add_user(username, email, password, user_type_name):
 def home():
     return render_template("login.html")
 
+
 @app.route("/register")
 def register():
     return render_template("register.html")
 
+
 @app.route("/chatbot")
 def chatbot():
     return render_template("index.html")
+
 
 # ---------------------------------------------------
 
