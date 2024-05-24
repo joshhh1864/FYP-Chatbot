@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 import pandas as pd
 import ast
@@ -8,6 +8,7 @@ from nltk.corpus import stopwords
 import json
 import nltk
 from nltk.stem import WordNetLemmatizer
+import uuid
 
 lemmatizer = WordNetLemmatizer()
 import random
@@ -53,7 +54,20 @@ class User(db.Model):
 
     def __repr__(self):
         return f"<User {self.username}>"
+    
+class ChatHistory(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    context = db.Column(db.String(120), nullable=False)
+    response = db.Column(db.String(120), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    session_id=db.Column(db.String(120), nullable=False)
 
+    user_relation = db.relationship(
+        "User", backref=db.backref("chat_history", lazy=True)
+    )
+
+    def __repr__(self):
+        return f"<ChatHistory {self.id} for User {self.user_relation.username}>"
 
 @app.route("/init_db")
 def init_db():
@@ -144,7 +158,7 @@ def auth_user(email, password):
     except Exception as e:
         return f"An error occurred: {e}"
 
-
+#User chat history 
 # -----------------------------------------------------
 
 
@@ -158,11 +172,16 @@ def home():
 def register():
     return render_template("register.html")
 
-
 @app.route("/chatbot")
 def chatbot():
-    return render_template("index.html")
+    session_id = str(uuid.uuid4())
+    # Redirect to the URL with the session ID
+    return redirect(url_for('chatbot_with_id', session_id=session_id))
 
+@app.route("/chatbot/<session_id>")
+def chatbot_with_id(session_id):
+    # You can use the session_id here for further processing
+    return render_template("index.html", session_id=session_id)
 
 # ---------------------------------------------------
 
