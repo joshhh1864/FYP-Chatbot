@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+from flask import Flask, render_template, request, jsonify, redirect, url_for, session
 from flask_sqlalchemy import SQLAlchemy
 import pandas as pd
 import ast
@@ -28,6 +28,7 @@ app = Flask(__name__)
 
 # Database Config ---------------------------------------
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///ws50.db"
+app.secret_key = b'_17dy2p"Fh7aw\nj8a]/'
 
 db = SQLAlchemy(app)
 
@@ -54,13 +55,14 @@ class User(db.Model):
 
     def __repr__(self):
         return f"<User {self.username}>"
-    
+
+
 class ChatHistory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     context = db.Column(db.String(120), nullable=False)
     response = db.Column(db.String(120), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-    session_id=db.Column(db.String(120), nullable=False)
+    session_id = db.Column(db.String(120), nullable=False)
 
     user_relation = db.relationship(
         "User", backref=db.backref("chat_history", lazy=True)
@@ -68,6 +70,7 @@ class ChatHistory(db.Model):
 
     def __repr__(self):
         return f"<ChatHistory {self.id} for User {self.user_relation.username}>"
+
 
 @app.route("/init_db")
 def init_db():
@@ -85,7 +88,7 @@ def init_db():
 # ------------------------------------------------------
 
 
-# User DB Manip ---------------------------------------
+# Auth ------------------------------------------------
 # Register User
 @app.route("/register/new_user", methods=["POST"])
 def register_new_user():
@@ -154,11 +157,16 @@ def auth_user(email, password):
         if not user.password == password:
             return "Incorrect password."
 
+        session["user_id"] = user.id
+        session["username"] = user.username
+        session["user_type"] = user.user_type
+
         return "User authenticated successfully."
     except Exception as e:
         return f"An error occurred: {e}"
 
-#User chat history 
+
+# User chat history
 # -----------------------------------------------------
 
 
@@ -172,16 +180,18 @@ def home():
 def register():
     return render_template("register.html")
 
+
 @app.route("/chatbot")
 def chatbot():
     session_id = str(uuid.uuid4())
     # Redirect to the URL with the session ID
-    return redirect(url_for('chatbot_with_id', session_id=session_id))
+    return redirect(url_for("chatbot_with_id", session_id=session_id))
+
 
 @app.route("/chatbot/<session_id>")
 def chatbot_with_id(session_id):
-    # You can use the session_id here for further processing
     return render_template("index.html", session_id=session_id)
+
 
 # ---------------------------------------------------
 
@@ -191,11 +201,31 @@ def chatbot_with_id(session_id):
 def send_message():
     # Get user input from the request
     user_input = request.json.get("user_input")
+    session_id = request.json.get("session_id")
 
-    if user_input is None:
+    if not user_input or not session_id:
         return jsonify({"error": "No user input provided"}), 400
+    
+    chat_history = ChatHistory.query.filter_by(session_id=session_id).all()
+    history_context = " ".join([f"{record.context}" for record in chat_history])
+
+    combined_input = user_input.join(history_context)
 
     bot_response = chatbot_response(user_input)
+
+    if bot_response:
+        try:
+            with app.app_context():
+                new_record = ChatHistory(
+                    context=user_input,
+                    response=bot_response[0],
+                    user_id=session["user_id"],
+                    session_id=session_id,
+                )
+                db.session.add(new_record)
+                db.session.commit()
+        except Exception as e:
+            return f"An error occurred: {e}"
 
     # Return the bot response as JSON
     return jsonify({"bot_response": bot_response})

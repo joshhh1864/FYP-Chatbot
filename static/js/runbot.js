@@ -13,10 +13,19 @@
 //   });
 // });
 
+document.getElementById("user-input").addEventListener("keypress", function(event) {
+  if (event.key === "Enter") {
+      event.preventDefault();  // Prevent the default action (e.g., form submission)
+      sendMessage();  // Call the sendMessage function
+  }
+});
+
 function sendMessage() {
   var userInput = document.getElementById("user-input").value;
-  if (userInput.trim() === "") return;
+  const urlParts = window.location.pathname.split("/");
+  sessionId = urlParts[urlParts.length - 1];
 
+  if (userInput.trim() === "") return;
   var chatContainer = document.getElementById("chat-container");
 
   // Create a new message element for the user's input
@@ -31,7 +40,7 @@ function sendMessage() {
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ user_input: userInput }),
+    body: JSON.stringify({ user_input: userInput, session_id: sessionId }),
   })
     .then((response) => response.json())
     .then((data) => {
