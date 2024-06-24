@@ -209,7 +209,7 @@ def send_message():
     chat_history = ChatHistory.query.filter_by(session_id=session_id).all()
     history_context = " ".join([f"{record.context}" for record in chat_history])
 
-    combined_input = user_input.join(history_context)
+    history_keywords = keyword_extraction(history_context)
 
     bot_response = chatbot_response(user_input)
 
@@ -228,7 +228,7 @@ def send_message():
             return f"An error occurred: {e}"
 
     # Return the bot response as JSON
-    return jsonify({"bot_response": bot_response})
+    return jsonify({"bot_response": bot_response, "history_context": history_keywords})
 
 
 # ------------------------------------------------------

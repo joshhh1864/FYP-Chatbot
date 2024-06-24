@@ -24,7 +24,7 @@
      "responses": ["See you later.", "Have a nice day.", "Bye! Come back again.", "I'll see you soon."]
     },
     {"tag": "thanks",
-     "patterns": ["Thanks", "Thank you", "That's helpful", "Thanks for the help", "Than you very much"],
+     "patterns": ["Thanks", "Thank you", "That's helpful", "Thanks for the help", "Thank you very much","Thks",""],
      "responses": ["Happy to help!", "Any time!", "My pleasure", "You're most welcome!"]
     },
     {"tag": "no-response",
@@ -48,12 +48,12 @@
       ]
     },
     {"tag": "skill",
-        "patterns": ["What can you do?"],
+        "patterns": ["What can you do?", "functions"],
         "responses": ["I can provide general advice regarding anxiety and depression, answer questions related to mental health and make daily conversations. Do not consider me as a subsitute for an actual mental healthcare worker. Please seek help if you don't feel satisfied with me."]
     },
     {"tag": "creation",
         "patterns": ["Who created you?", "How were you made?", "How were you created?"],
-        "responses": ["I was created by >.", "I was trained on a text dataset using Deep Learning & Natural Language Processing techniques", "The real question is: Who created you?"]
+        "responses": ["I was created by the eldritch gods to sacrifice souls to the damned, UwU.", "I was trained on a text dataset using Deep Learning & Natural Language Processing techniques", "The real question is: Who created you?"]
     },
     {"tag": "name",
         "patterns": ["My name is ", "I am name.", "I go by "],
@@ -64,7 +64,7 @@
     "responses": ["Sure. Tell me how can i assist you", "Tell me your problem so that i can assist you", "Yes, sure. How can I help you?"]
     },
     {"tag": "sad",
-    "patterns": ["I am feeling lonely", "I am so lonely", "I feel down", "I feel sad", "I am sad", "I feel so lonely", "I feel empty", "I don't have anyone"],
+    "patterns": ["I am feeling lonely", "I am so lonely", "I feel down", "I feel sad", "I am sad", "I feel so lonely", "I feel empty", "I don't have anyone", "lonely"],
     "responses": ["I'm sorry to hear that. I'm here for you. Talking about it might help. So, tell me why do you think you're feeling this way?", "I'm here for you. Could you tell me why you're feeling this way?", "Why do you think you feel this way?", "How long have you been feeling this way?"]
     },
     {"tag": "stressed",
@@ -84,11 +84,11 @@
         "responses": ["That's geat to hear. I'm glad you're feeling this way.", "Oh i see. That's great.", "Did something happen which made you feel this way?"]
     },
     {"tag": "casual",
-        "patterns": ["Oh I see.", "ok", "okay", "nice", "Whatever", "K", "Fine", "yeah", "yes", "no", "not really"],
+        "patterns": ["Oh I see.", "ok", "okay", "nice", "Whatever", "K", "Fine", "yeah", "yes", "no", "not really", "Bruh", "good"],
         "responses": ["Let's discuss further why you're feeling this way.", "How were you feeling last week?", "I'm listening. Please go on.", "Tell me more", "Can you elaborate on that?", "Come Come elucidate your thoughts"]
     },
     {"tag": "anxious",
-        "patterns": ["I feel so anxious.", "I'm so anxious because of "],
+        "patterns": ["I feel so anxious.", "I'm so anxious because of ", "I very anxious because "],
         "responses": ["Don't be hard on yourself. What's the reason behind this?", "Can you tell me more about this feeling?", "I understand that it can be scary. Tell me more about it.", "Don't let the little worries bring you down. What's the worse that can happen?"]
     },
     {"tag": "not-talking",
@@ -132,8 +132,19 @@
         "responses": ["Oh I see. Tell me more", "I see. What else?", "Tell me more about it.", "Oh okay. Why don't you tell me more about it?", "I'm listening. Tell me more."]
     },
     {"tag": "jokes",
-        "patterns": ["Tell me a joke", "Tell me another joke"],
-        "responses": ["mental health is not a joke."]
+        "patterns": ["Tell me a joke", "Tell me another joke", "I like jokes, can you tell me one?"],
+        "responses": [
+            "Why don't scientists trust atoms? Because they make up everything!",
+            "What do you call fake spaghetti? An impasta!",
+            "Why did the scarecrow win an award? Because he was outstanding in his field!",
+            "What do you get if you cross a snowman and a vampire? Frostbite!",
+            "Why did the math book look sad? Because it had too many problems.",
+            "Why dont skeletons fight each other? They dont have the guts.",
+            "What do you call cheese that isn't yours? Nacho cheese!",
+            "Why can't you give Elsa a balloon? Because she will let it go!",
+            "Whats orange and sounds like a parrot? A carrot!",
+            "Why did the bicycle fall over? Because it was two-tired!"
+        ]
     },
     {"tag": "repeat",
         "patterns": ["You already told me that", "You mentioned that already", "Why are you repeating yourself?"],
@@ -180,7 +191,7 @@
         "responses": ["Next, I would suggest you to practice meditation. Meditation can produce a deep state of relaxation and a tranquil mind."]
     },
     {"tag": "meditation",
-        "patterns": ["hmmm that sounds like it could be useful to me.", "That sounds useful."],
+        "patterns": ["hmmm that sounds like it could be useful to me.", "That sounds useful.", "That helps."],
         "responses": ["Focus all your attention on your breathing. Concentrate on feeling and listening as you inhale and exhale through your nostrils. Breathe deeply and slowly. When your attention wanders, gently return your focus to your breathing."]
     },
     {"tag": "user-meditation",
@@ -204,7 +215,7 @@
         "responses": ["According to a UNICEF report, One in seven Indians between 15-24 years of age feels depressed", "1 in 5 young people (age 13-18) has or will develop a mental illness in their lifetime.", "Depression is the leading cause of disability worldwide."]
     },
     {"tag": "fact-1",
-        "patterns": ["What is mental health?", "Define Mental Health"],
+        "patterns": ["What is mental health?", "Define Mental Health", "Give me Information."],
         "responses": ["Mental health is a state of well-being in which the individual realizes his or her own abilities, can cope with the normal stresses of life, can work productively and fruitfully, and is able to make a contribution to his or her community", "Mental health includes our emotional, psychological, and social well-being. It affects how we think, feel, and act. It also helps determine how we handle stress, relate to others, and make choices."]
     },
     {"tag": "fact-2",
@@ -232,7 +243,7 @@
         "responses": ["Mental illnesses are health conditions that disrupt a person's thoughts, emotions, relationships, and daily functioning. They are associated with distress and diminished capacity to engage in the ordinary activities of daily life. Mental illnesses fall along a continuum of severity: some are fairly mild and only interfere with some aspects of life, such as certain phobias. On the other end of the spectrum lie serious mental illnesses, which result in major functional impairment and interference with daily life. These include such disorders as major depression, schizophrenia, and bipolar disorder, and may require that the person receives care in a hospital. It is important to know that mental illnesses are medical conditions that have nothing to do with a person's character, intelligence, or willpower. Just as diabetes is a disorder of the pancreas, mental illness is a medical condition due to the brain's biology. Similarly to how one would treat diabetes with medication and insulin, mental illness is treatable with a combination of medication and social support. These treatments are highly effective, with 70-90 percent of individuals receiving treatment experiencing a reduction in symptoms and an improved quality of life. With the proper treatment, it is very possible for a person with mental illness to be independent and successful."]
     },
     {"tag": "fact-9",
-        "patterns": ["Who does mental illness affect?"],
+        "patterns": ["Who does mental illness affect?", "Who mental illness?"],
         "responses": ["It is estimated that mental illness affects 1 in 5 adults in America, and that 1 in 24 adults have a serious mental illness. Mental illness does not discriminate; it can affect anyone, regardless of gender, age, income, social status, ethnicity, religion, sexual orientation, or background. Although mental illness can affect anyone, certain conditions may be more common in different populations. For instance, eating disorders tend to occur more often in females, while disorders such as attention deficit/hyperactivity disorder is more prevalent in children. Additionally, all ages are susceptible, but the young and the old are especially vulnerable. Mental illnesses usually strike individuals in the prime of their lives, with 75 percent of mental health conditions developing by the age of 24. This makes identification and treatment of mental disorders particularly difficult, because the normal personality and behavioral changes of adolescence may mask symptoms of a mental health condition. Parents and caretakers should be aware of this fact, and take notice of changes in their childÃ¢â‚¬â„¢s mood, personality, personal habits, and social withdrawal. When these occur in children under 18, they are referred to as serious emotional disturbances (SEDs)."]
     },
     {"tag": "fact-10",
@@ -304,7 +315,7 @@
         "responses": ["It is often more realistic and helpful to find out what helps with the issues you face. Talking, counselling, medication, friendships, exercise, good sleep and nutrition, and meaningful occupation can all help."]
     },
     {"tag": "fact-27",
-        "patterns": ["What causes mental health problems?"],
+        "patterns": ["What causes mental health problems?","Prevent mental health issues."],
         "responses": ["Challenges or problems with your mental health can arise from psychological, biological, and social, issues, as well as life events."]
     },
     {"tag": "fact-28",
@@ -312,11 +323,11 @@
         "responses": ["The most important thing is to talk to someone you trust. This might be a friend, colleague, family member, or GP. In addition to talking to someone, it may be useful to find out more information about what you are experiencing. These things may help to get some perspective on what you are experiencing, and be the start of getting help."]
     },
     {"tag": "fact-29",
-        "patterns": ["How do I know if I'm unwell?"],
+        "patterns": ["How do I know if I'm unwell?", "I feel sick, why is that.", "Why do I feel this way?"],
         "responses": ["If your beliefs , thoughts , feelings or behaviours have a significant impact on your ability to function in what might be considered a normal or ordinary way, it would be important to seek help."]
     },
     {"tag": "fact-30",
-        "patterns": ["How can I maintain social connections? What if I feel lonely?"],
+        "patterns": ["How can I maintain social connections? What if I feel lonely?","Social anxiety.","No friends."],
         "responses": ["A lot of people are alone right now, but we don't have to be lonely. We're all in this together. Think about the different ways to connect that are most meaningful for you. For example, you might prefer a video chat over a phone call, or you might prefer to text throughout the day rather than one set time for a video call. Then, work with your social networks to make a plan. You might video chat with your close friends in the evening and phone a family member once a week. Remember to be mindful of people who may not be online. Check in by phone and ask how you can help. The quality of your social connections matter. Mindlessly scrolling through social media and liking a few posts usually doesn't build strong social connections. Make sure you focus on strategies that actually make you feel included and connected. If your current strategies don't help you feel connected, problem-solve to see if you can find a solution. Everyone feels lonely at times. Maybe you recently moved to a new city, are changing your circle of friends, lost someone important in your life, or lost your job and also lost important social connections with coworkers. Other people may have physical connections to others but may feel like their emotional or social needs aren't met. Measures like social distancing or self-isolation can make loneliness feel worse no matter why you feel lonely now. Reach out to the connections you do have. Suggest ways to keep in touch and see if you can set a regular time to connect. People may hesitate to reach out for a lot of different reasons, so don't be afraid to be the one who asks. Look for local community support groups and mutual aid groups on social media. This pandemic is bringing everyone together, so look for opportunities to make new connections. These groups are a great way to share your skills and abilities or seek help and support. Look for specialized support groups. Support groups are moving online, and there are a lot of different support lines to call if you need to talk to someone."]
     },
     {"tag": "fact-31",

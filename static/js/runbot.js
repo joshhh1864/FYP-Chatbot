@@ -44,6 +44,7 @@ function sendMessage() {
   })
     .then((response) => response.json())
     .then((data) => {
+      console.log(data.history_context)
       console.log(data.bot_response);
 
       if (Array.isArray(data.bot_response)) {
