@@ -211,7 +211,7 @@ def send_message():
 
     history_keywords = keyword_extraction(history_context)
 
-    bot_response = chatbot_response(user_input)
+    bot_response = chatbot_response(user_input, history_keywords)
 
     if bot_response:
         try:
@@ -235,9 +235,9 @@ def send_message():
 
 
 # Chatbot functions--------------------------------------
-def chatbot_response(user_input):
+def chatbot_response(user_input, history_keywords):
     responses = []
-    response = get_response(user_input, dataset)
+    response = get_response(user_input, dataset, history_keywords)
     if response:
         responses.extend(response)
 
@@ -268,7 +268,7 @@ def keyword_extraction(user_input):
     return matching_keywords
 
 
-def get_response(user_input, dataset):
+def get_response(user_input, dataset, history_keywords):
     intents = json.loads(open("chatbot/intents.json").read())
     words = pickle.load(open("texts.pkl", "rb"))
     labels = pickle.load(open("labels.pkl", "rb"))
@@ -298,8 +298,11 @@ def get_response(user_input, dataset):
             if predicted_class != "greeting":
                 keywords = keyword_extraction(user_input)
                 advice = get_advice(dataset, predicted_class, keywords)
+                cul_advice = get_cul_advice(dataset, history_keywords)
                 if advice:
                     responses.append(advice)
+                if cul_advice:
+                    responses.append(cul_advice)
                 return responses
             return responses
     return None
@@ -307,18 +310,31 @@ def get_response(user_input, dataset):
 
 def get_advice(dataset, predicted_class, found_keywords):
     matching_responses = []
-    print(found_keywords)
     # Iterate over each row in the dataset
     for index, row in dataset.iterrows():
         keywords = ast.literal_eval(row["mental_health_keywords"])
         if row["predicted_intent"] == predicted_class and keywords == found_keywords:
-            print("yes", found_keywords)
+            print("ADVICE", found_keywords)
             matching_responses.append(row["Response"])
 
     if matching_responses:
         return random.choice(matching_responses)
     else:
         return None
+    
+def get_cul_advice(dataset, found_keywords):
+    matching_responses = []
+    # Iterate over each row in the dataset
+    for index, row in dataset.iterrows():
+        keywords = ast.literal_eval(row["mental_health_keywords"])
+        if keywords == found_keywords:
+            print("CUL_ADVICE", found_keywords)
+            matching_responses.append(row["Response"])
+
+    if matching_responses:
+        return random.choice(matching_responses)
+    else:
+        return None   
 
 
 # ------------------------------------------------------------
