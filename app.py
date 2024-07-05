@@ -160,11 +160,22 @@ def auth_user(email, password):
         session["user_id"] = user.id
         session["username"] = user.username
         session["user_type"] = user.user_type
+        session["user_email"] = user.email
 
         return "User authenticated successfully."
     except Exception as e:
         return f"An error occurred: {e}"
 
+@app.route("/logout", methods=["POST"])
+def logout_user():
+    try:
+        # Clear all session data
+        session.clear()
+
+        # Optionally, you can redirect to the login page or a goodbye message page
+        return jsonify({"message": "User logged out successfully."}), 200
+    except Exception as e:
+        return jsonify({"error": f"An error occurred: {e}"}), 500
 
 # User chat history
 # -----------------------------------------------------
@@ -193,6 +204,11 @@ def chatbot_with_id(session_id):
     return render_template("index.html", session_id=session_id)
 
 
+@app.route("/dashboard")
+def dashboard():
+    return render_template("dashboard.html")
+
+
 # ---------------------------------------------------
 
 
@@ -205,7 +221,7 @@ def send_message():
 
     if not user_input or not session_id:
         return jsonify({"error": "No user input provided"}), 400
-    
+
     chat_history = ChatHistory.query.filter_by(session_id=session_id).all()
     history_context = " ".join([f"{record.context}" for record in chat_history])
 
@@ -321,7 +337,8 @@ def get_advice(dataset, predicted_class, found_keywords):
         return random.choice(matching_responses)
     else:
         return None
-    
+
+
 def get_cul_advice(dataset, found_keywords):
     matching_responses = []
     # Iterate over each row in the dataset
@@ -334,11 +351,33 @@ def get_cul_advice(dataset, found_keywords):
     if matching_responses:
         return random.choice(matching_responses)
     else:
-        return None   
+        return None
 
 
 # ------------------------------------------------------------
 
+
+# User API-----------------------------------------------------
+@app.route("/get_current_user")
+def getCurrentUser():
+    try:
+        user = User.query.filter_by(email=session["user_email"]).first()
+        if not user:
+            return "User not found."
+
+        return jsonify(
+            {
+                "user_id": user.id,
+                "username": user.username,
+                "user_type": user.user_type,
+                "user_email": user.email,
+            }
+        )
+    except Exception as e:
+        return f"An error occurred: {e}"
+
+
+# ----------------------------------------------------------------
 
 if __name__ == "__main__":
     app.run(debug=True)

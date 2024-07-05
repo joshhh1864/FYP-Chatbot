@@ -55,13 +55,11 @@ function sendMessage() {
           chatContainer.appendChild(botMessageElement);
         });
       } else {
-        // If the response is not an array, handle it as a single message
         var botMessageElement = document.createElement("div");
         botMessageElement.classList.add("message", "bot-message");
         botMessageElement.textContent = data.bot_response;
         chatContainer.appendChild(botMessageElement);
       }
-      // Scroll to the bottom of the chat container
       chatContainer.scrollTop = chatContainer.scrollHeight;
     });
 
