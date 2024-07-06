@@ -9,6 +9,7 @@ import json
 import nltk
 from nltk.stem import WordNetLemmatizer
 import uuid
+from flask_migrate import Migrate
 
 lemmatizer = WordNetLemmatizer()
 import random
@@ -31,7 +32,7 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///ws50.db"
 app.secret_key = b'_17dy2p"Fh7aw\nj8a]/'
 
 db = SQLAlchemy(app)
-
+migrate = Migrate(app, db)
 
 # Define a model
 class UserType(db.Model):
@@ -63,6 +64,8 @@ class ChatHistory(db.Model):
     response = db.Column(db.String(120), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     session_id = db.Column(db.String(120), nullable=False)
+    feedback = db.Column(db.Integer)
+    predicted_intent = db.Column(db.String(120), nullable=False ,default="unknown")
 
     user_relation = db.relationship(
         "User", backref=db.backref("chat_history", lazy=True)
@@ -167,6 +170,19 @@ def auth_user(email, password):
 
 
 # User chat history
+@app.route("/send_feedback")
+def send_feedback():
+    data = request.get_json()
+    session_id= data.get("sessionid")
+    response= data.get("response")
+    feedback= data.get("feedback")
+
+    if not data:
+        return jsonify({"error": "Something has went wrong."}), 400
+    
+    chat_history = ChatHistory.query.filter_by(session_id=session_id).all()
+
+
 # -----------------------------------------------------
 
 
@@ -211,6 +227,7 @@ def send_message():
 
     history_keywords = keyword_extraction(history_context)
 
+    predicted_intent = get_predicted_intent(user_input)
     bot_response = chatbot_response(user_input, history_keywords)
 
     if bot_response:
@@ -221,6 +238,8 @@ def send_message():
                     response=bot_response[0],
                     user_id=session["user_id"],
                     session_id=session_id,
+                    feedback= "",
+                    predicted_intent= predicted_intent
                 )
                 db.session.add(new_record)
                 db.session.commit()
@@ -267,6 +286,29 @@ def keyword_extraction(user_input):
 
     return matching_keywords
 
+def get_predicted_intent(user_input):
+    words = pickle.load(open("texts.pkl", "rb"))
+    labels = pickle.load(open("labels.pkl", "rb"))
+
+    lemmatized_sentence = [
+        lemmatizer.lemmatize(word.lower()) for word in nltk.word_tokenize(user_input)
+    ]
+
+    # Create bag-of-words representation
+    input_bag = [1 if word in lemmatized_sentence else 0 for word in words]
+
+    # Reshape input for prediction
+    input_bag = np.array(input_bag).reshape(1, -1)
+
+    # Make prediction
+    predicted_probabilities = model.predict(input_bag)
+    predicted_class_index = np.argmax(predicted_probabilities[0])
+    predicted_class = labels[predicted_class_index]
+
+    if predicted_class:
+        return predicted_class
+    
+    return None    
 
 def get_response(user_input, dataset, history_keywords):
     intents = json.loads(open("chatbot/intents.json").read())
