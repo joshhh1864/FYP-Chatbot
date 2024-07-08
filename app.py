@@ -10,6 +10,8 @@ import nltk
 from nltk.stem import WordNetLemmatizer
 import uuid
 from flask_migrate import Migrate
+import shutil
+import os
 
 lemmatizer = WordNetLemmatizer()
 import random
@@ -33,6 +35,7 @@ app.secret_key = b'_17dy2p"Fh7aw\nj8a]/'
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
+
 
 # Define a model
 class UserType(db.Model):
@@ -65,7 +68,7 @@ class ChatHistory(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     session_id = db.Column(db.String(120), nullable=False)
     feedback = db.Column(db.Integer)
-    predicted_intent = db.Column(db.String(120), nullable=False ,default="unknown")
+    predicted_intent = db.Column(db.String(120), nullable=False, default="unknown")
 
     user_relation = db.relationship(
         "User", backref=db.backref("chat_history", lazy=True)
@@ -170,17 +173,36 @@ def auth_user(email, password):
 
 
 # User chat history
-@app.route("/send_feedback")
+@app.route("/send_feedback", methods=["POST"])
 def send_feedback():
     data = request.get_json()
-    session_id= data.get("sessionid")
-    response= data.get("response")
-    feedback= data.get("feedback")
+    session_id = data.get("sessionid")
+    response_text = data.get("response")
+    feedback = data.get("feedback")
 
     if not data:
         return jsonify({"error": "Something has went wrong."}), 400
-    
-    chat_history = ChatHistory.query.filter_by(session_id=session_id).all()
+
+    try:
+        chat_history_record = ChatHistory.query.filter_by(
+            session_id=session_id, response=response_text
+        ).first()
+
+        if not chat_history_record:
+            return jsonify({"error": "Chat history record not found."}), 404
+
+        chat_history_record.feedback = feedback
+
+        db.session.commit()
+
+        return jsonify({"message": "Feedback recorded successfully."}), 200
+
+    except Exception as e:
+        print(f"Error occurred: {e}")
+        return (
+            jsonify({"error": "An error occurred while processing your request."}),
+            500,
+        )
 
 
 # -----------------------------------------------------
@@ -212,6 +234,60 @@ def chatbot_with_id(session_id):
 # ---------------------------------------------------
 
 
+# Update json file ------------------------------------------
+@app.route("/update_intents", methods=["GET"])
+def update_intents():
+    try:
+        positive_feedback = ChatHistory.query.filter_by(feedback=0).all()
+
+        if not positive_feedback:
+            return jsonify({"message": "No positive feedback found."})
+
+        #Create a list
+        new_patterns_by_intent = {}
+        for entry in positive_feedback:
+            #extract the two relevant columns
+            predicted_intent = entry.predicted_intent.strip()
+            context = entry.context.strip()
+            if predicted_intent not in new_patterns_by_intent:
+                # Create a new set of intents mapped to context if not existent
+                new_patterns_by_intent[predicted_intent] = set()
+            new_patterns_by_intent[predicted_intent].add(context)
+            # append to file
+
+
+        with open("chatbot/intents.json", "r") as file:
+            intents = json.load(file)
+
+        # Scan through the whole intents file (tag --> patterns)
+        for intent in intents['intents']:
+            # Found that tag within the new patterns to be added
+            if intent['tag'] in new_patterns_by_intent:
+                # Loop through all Patterns for that intent
+                for pattern in new_patterns_by_intent[intent['tag']]:
+                    # If no duplicate then add
+                    if pattern not in intent['patterns']:  
+                        intent['patterns'].append(pattern)
+
+        temp_file_path = "temp_intents.json"
+        with open(temp_file_path, "w") as temp_file:
+            json.dump(intents, temp_file, indent=4)
+
+        backup_file_path = "backup_intents.json"
+        shutil.copy("intents.json", backup_file_path)
+
+        # Replace the original file with the updated temporary file
+        os.replace(temp_file_path, "intents.json")
+
+        return jsonify({"message": "intents.json updated successfully."})
+
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+
+# ------------------------------------------------------------
+
+
 # ChatBot API --------------------------------------
 @app.route("/send_message", methods=["POST"])
 def send_message():
@@ -221,7 +297,7 @@ def send_message():
 
     if not user_input or not session_id:
         return jsonify({"error": "No user input provided"}), 400
-    
+
     chat_history = ChatHistory.query.filter_by(session_id=session_id).all()
     history_context = " ".join([f"{record.context}" for record in chat_history])
 
@@ -238,8 +314,8 @@ def send_message():
                     response=bot_response[0],
                     user_id=session["user_id"],
                     session_id=session_id,
-                    feedback= "",
-                    predicted_intent= predicted_intent
+                    feedback="",
+                    predicted_intent=predicted_intent,
                 )
                 db.session.add(new_record)
                 db.session.commit()
@@ -286,6 +362,7 @@ def keyword_extraction(user_input):
 
     return matching_keywords
 
+
 def get_predicted_intent(user_input):
     words = pickle.load(open("texts.pkl", "rb"))
     labels = pickle.load(open("labels.pkl", "rb"))
@@ -307,8 +384,9 @@ def get_predicted_intent(user_input):
 
     if predicted_class:
         return predicted_class
-    
-    return None    
+
+    return None
+
 
 def get_response(user_input, dataset, history_keywords):
     intents = json.loads(open("chatbot/intents.json").read())
@@ -363,7 +441,8 @@ def get_advice(dataset, predicted_class, found_keywords):
         return random.choice(matching_responses)
     else:
         return None
-    
+
+
 def get_cul_advice(dataset, found_keywords):
     matching_responses = []
     # Iterate over each row in the dataset
@@ -376,7 +455,7 @@ def get_cul_advice(dataset, found_keywords):
     if matching_responses:
         return random.choice(matching_responses)
     else:
-        return None   
+        return None
 
 
 # ------------------------------------------------------------
