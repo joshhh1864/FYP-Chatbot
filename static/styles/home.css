@@ -89,3 +89,13 @@ body {
   word-wrap: break-word;
   max-width: 90%;
 }
+
+.feedback-btn {
+  margin-left: 10px;
+  cursor: pointer;
+}
+
+.feedback-container {
+  margin-top: 10px;
+  color:#5C857C;
+}
