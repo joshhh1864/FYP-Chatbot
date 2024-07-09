@@ -7,7 +7,10 @@ document
     }
   });
 
+let feedbackButtonAdded = false;
+
 function sendMessage() {
+  feedbackButtonAdded= false;
   var userInput = document.getElementById("user-input").value;
   const urlParts = window.location.pathname.split("/");
   sessionId = urlParts[urlParts.length - 1];
@@ -35,11 +38,13 @@ function sendMessage() {
       console.log(data.bot_response);
 
       if (Array.isArray(data.bot_response)) {
-        data.bot_response.forEach((response) => {
-          appendBotMessage(response);
-        });
-      } else {
-        appendBotMessage(response);
+        data?.bot_response
+          .filter(response => response && typeof response === 'string')
+          .forEach(response => {
+            appendBotMessage(response);
+          });
+      } else if (data?.bot_response && typeof data.bot_response === 'string') {
+        appendBotMessage(data.bot_response);
       }
       // Scroll to the bottom of the chat container
       chatContainer.scrollTop = chatContainer.scrollHeight;
@@ -57,33 +62,36 @@ function appendBotMessage(response) {
   botMessageElement.classList.add("message", "bot-message");
   botMessageElement.textContent = response;
 
-  // Create a container for the feedback buttons
-  var feedbackContainer = document.createElement("div");
-  feedbackContainer.classList.add("feedback-container");
+  if (!feedbackButtonAdded) {
+    var feedbackContainer = document.createElement("div");
+    feedbackContainer.classList.add("feedback-container");
 
-  var feedbackMessage = document.createElement("span");
-  feedbackMessage.textContent = "Did you find this helpful?";
-  feedbackMessage.classList.add("feedback-message");
+    var feedbackMessage = document.createElement("span");
+    feedbackMessage.textContent = "Did you find this helpful?";
+    feedbackMessage.classList.add("feedback-message");
 
-  // Create thumbs up button
-  var thumbsUp = document.createElement("span");
-  thumbsUp.textContent = "ദ്ദി´▽`)";
-  thumbsUp.classList.add("feedback-btn", "thumbs-up");
-  thumbsUp.onclick = () => handleFeedback(botMessageElement, response, 0);
+    // Create thumbs up button
+    var thumbsUp = document.createElement("span");
+    thumbsUp.textContent = "ദ്ദി´▽`)";
+    thumbsUp.classList.add("feedback-btn", "thumbs-up");
+    thumbsUp.onclick = () => handleFeedback(botMessageElement, response, 0);
 
-  // Create thumbs down button
-  var thumbsDown = document.createElement("span");
-  thumbsDown.textContent = "( ,,⩌'︿'⩌,,)";
-  thumbsDown.classList.add("feedback-btn", "thumbs-down");
-  thumbsDown.onclick = () => handleFeedback(botMessageElement, response, 1);
+    // Create thumbs down button
+    var thumbsDown = document.createElement("span");
+    thumbsDown.textContent = "(ᴗ_ ᴗ。) ᴖ̈.";
+    thumbsDown.classList.add("feedback-btn", "thumbs-down");
+    thumbsDown.onclick = () => handleFeedback(botMessageElement, response, 1);
 
-  // Append the buttons to the feedback container
-  feedbackContainer.appendChild(feedbackMessage);
-  feedbackContainer.appendChild(thumbsUp);
-  feedbackContainer.appendChild(thumbsDown);
+    // Append the buttons to the feedback container
+    feedbackContainer.appendChild(feedbackMessage);
+    feedbackContainer.appendChild(thumbsUp);
+    feedbackContainer.appendChild(thumbsDown);
 
-  // Append the feedback container to the bot message
-  botMessageElement.appendChild(feedbackContainer);
+    // Append the feedback container to the bot message
+    botMessageElement.appendChild(feedbackContainer);
+
+    feedbackButtonAdded = true;
+  }
 
   chatContainer.appendChild(botMessageElement);
 }

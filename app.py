@@ -274,10 +274,10 @@ def update_intents():
             json.dump(intents, temp_file, indent=4)
 
         backup_file_path = "backup_intents.json"
-        shutil.copy("intents.json", backup_file_path)
+        shutil.copy("chatbot/intents.json", backup_file_path)
 
         # Replace the original file with the updated temporary file
-        os.replace(temp_file_path, "intents.json")
+        os.replace(temp_file_path, "chatbot/intents.json")
 
         return jsonify({"message": "intents.json updated successfully."})
 
