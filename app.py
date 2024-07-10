@@ -257,18 +257,18 @@ def dashboard():
 def get_dashboard_advice():
     required_class = [
         "suicide",
-        "depression",
-        "depressed",
-        "learn-mental-health",
         "worthless",
+        "i am lonely!"
     ]
     class_responses = {intent: [] for intent in required_class}
 
     try:
         for index, row in dataset.iterrows():
             intent = row.get("predicted_intent")
-            if intent in required_class and len(class_responses[intent]) < 2:
-                class_responses[intent].append(row.get("Response", ""))
+            if intent in required_class  and len(class_responses[intent]) < 1:
+                 response = row["Response"]
+                 if pd.notna(response):  
+                    class_responses[intent].append(response)
 
     except Exception as e:
         return jsonify({"error": str(e)})

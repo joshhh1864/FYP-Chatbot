@@ -517,7 +517,6 @@ a {
 }
 
 .transfer-section-header {
-	display: flex;
 	align-items: center;
 	width: 100%;
 	padding-bottom: 0.75rem;
@@ -641,13 +640,14 @@ a {
 .intent-title {
 	font-size: 1.1rem;
 	font-weight: bold;
-	margin-bottom: 0.5rem;
-  }
+	margin-bottom: 15px;
+}
   
-  .response {
+.response {
 	margin-left: 1.5rem;
 	margin-bottom: 0.5rem;
-  }
+	text-align: justify;
+}
 
 .transfer-logo {
 	background-color: var(--c-gray-200);
