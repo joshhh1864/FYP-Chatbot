@@ -172,6 +172,7 @@ def auth_user(email, password):
     except Exception as e:
         return f"An error occurred: {e}"
 
+
 @app.route("/logout", methods=["POST"])
 def logout_user():
     try:
@@ -182,6 +183,7 @@ def logout_user():
         return jsonify({"message": "User logged out successfully."}), 200
     except Exception as e:
         return jsonify({"error": f"An error occurred: {e}"}), 500
+
 
 # User chat history
 @app.route("/send_feedback", methods=["POST"])
@@ -250,6 +252,33 @@ def dashboard():
 # ---------------------------------------------------
 
 
+# -----------------------------------------------------
+@app.route("/get_dashboard_advice", methods=["GET"])
+def get_dashboard_advice():
+    required_class = [
+        "suicide",
+        "depression",
+        "depressed",
+        "learn-mental-health",
+        "worthless",
+    ]
+    class_responses = {intent: [] for intent in required_class}
+
+    try:
+        for index, row in dataset.iterrows():
+            intent = row.get("predicted_intent")
+            if intent in required_class and len(class_responses[intent]) < 2:
+                class_responses[intent].append(row.get("Response", ""))
+
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+    return jsonify(class_responses)
+
+
+# ------------------------------------------------------
+
+
 # Update json file ------------------------------------------
 @app.route("/update_intents", methods=["GET"])
 def update_intents():
@@ -259,10 +288,10 @@ def update_intents():
         if not positive_feedback:
             return jsonify({"message": "No positive feedback found."})
 
-        #Create a list
+        # Create a list
         new_patterns_by_intent = {}
         for entry in positive_feedback:
-            #extract the two relevant columns
+            # extract the two relevant columns
             predicted_intent = entry.predicted_intent.strip()
             context = entry.context.strip()
             if predicted_intent not in new_patterns_by_intent:
@@ -271,19 +300,18 @@ def update_intents():
             new_patterns_by_intent[predicted_intent].add(context)
             # append to file
 
-
         with open("chatbot/intents.json", "r") as file:
             intents = json.load(file)
 
         # Scan through the whole intents file (tag --> patterns)
-        for intent in intents['intents']:
+        for intent in intents["intents"]:
             # Found that tag within the new patterns to be added
-            if intent['tag'] in new_patterns_by_intent:
+            if intent["tag"] in new_patterns_by_intent:
                 # Loop through all Patterns for that intent
-                for pattern in new_patterns_by_intent[intent['tag']]:
+                for pattern in new_patterns_by_intent[intent["tag"]]:
                     # If no duplicate then add
-                    if pattern not in intent['patterns']:  
-                        intent['patterns'].append(pattern)
+                    if pattern not in intent["patterns"]:
+                        intent["patterns"].append(pattern)
 
         temp_file_path = "temp_intents.json"
         with open(temp_file_path, "w") as temp_file:

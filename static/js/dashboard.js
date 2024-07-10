@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", function () {
       })
       .then((data) => {
         // Update the user info in the HTML
-        document.getElementById("user-name").textContent = data.username;
+        document.getElementById("user-name").textContent = data?.username;
       })
       .catch((error) => {
         // Handle any errors that occur during fetch
@@ -25,6 +25,40 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   fetchUserInfo();
+
+  function getDashboardAdvice() {
+    fetch("/get_dashboard_advice")
+      .then((response) => response.json())
+      .then((data) => {
+        const adviceColumn = document.getElementById("advice-column");
+
+        Object.keys(data).forEach((intent) => {
+          const transferElement = document.createElement("div");
+          transferElement.classList.add("transfer");
+
+          // Create and append the intent title
+          const intentTitle = document.createElement("div");
+          intentTitle.classList.add("intent-title");
+          intentTitle.textContent = intent;
+          transferElement.appendChild(intentTitle);
+
+          // Append each response under the intent title
+          data[intent].forEach((response) => {
+            const responseElement = document.createElement("div");
+            responseElement.classList.add("response");
+            responseElement.textContent = response;
+            transferElement.appendChild(responseElement);
+          });
+
+          adviceColumn.appendChild(transferElement);
+        });
+      })
+      .catch((error) =>
+        console.error("Error fetching intents and responses:", error)
+      );
+  }
+
+  getDashboardAdvice();
 
   function handleLogout() {
     fetch("/logout", { method: "POST" })
@@ -44,5 +78,7 @@ document.addEventListener("DOMContentLoaded", function () {
       });
   }
 
-  document.querySelector('.icon-button.logout').addEventListener('click', handleLogout);
+  document
+    .querySelector(".icon-button.logout")
+    .addEventListener("click", handleLogout);
 });
