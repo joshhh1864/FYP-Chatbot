@@ -6,3 +6,5 @@ flask --app app run
 ---DB Connection----
 RUN 
 flask db upgrade
+
+HANDLE NANs
