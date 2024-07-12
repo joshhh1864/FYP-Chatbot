@@ -289,5 +289,5 @@ def keyword_extraction(text):
 
 
 # train_model_svm()
-# predict_intent()
-train_model_RNN()
+predict_intent()
+# train_model_RNN()
