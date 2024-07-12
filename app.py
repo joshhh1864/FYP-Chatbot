@@ -166,10 +166,23 @@ def auth_user(email, password):
         session["user_id"] = user.id
         session["username"] = user.username
         session["user_type"] = user.user_type
+        session["user_email"] = user.email
 
         return "User authenticated successfully."
     except Exception as e:
         return f"An error occurred: {e}"
+
+
+@app.route("/logout", methods=["POST"])
+def logout_user():
+    try:
+        # Clear all session data
+        session.clear()
+
+        # Optionally, you can redirect to the login page or a goodbye message page
+        return jsonify({"message": "User logged out successfully."}), 200
+    except Exception as e:
+        return jsonify({"error": f"An error occurred: {e}"}), 500
 
 
 # User chat history
@@ -231,7 +244,39 @@ def chatbot_with_id(session_id):
     return render_template("index.html", session_id=session_id)
 
 
+@app.route("/dashboard")
+def dashboard():
+    return render_template("dashboard.html")
+
+
 # ---------------------------------------------------
+
+
+# -----------------------------------------------------
+@app.route("/get_dashboard_advice", methods=["GET"])
+def get_dashboard_advice():
+    required_class = [
+        "suicide",
+        "worthless",
+        "i am lonely!"
+    ]
+    class_responses = {intent: [] for intent in required_class}
+
+    try:
+        for index, row in dataset.iterrows():
+            intent = row.get("predicted_intent")
+            if intent in required_class  and len(class_responses[intent]) < 1:
+                 response = row["Response"]
+                 if pd.notna(response):  
+                    class_responses[intent].append(response)
+
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+    return jsonify(class_responses)
+
+
+# ------------------------------------------------------
 
 
 # Update json file ------------------------------------------
@@ -243,10 +288,10 @@ def update_intents():
         if not positive_feedback:
             return jsonify({"message": "No positive feedback found."})
 
-        #Create a list
+        # Create a list
         new_patterns_by_intent = {}
         for entry in positive_feedback:
-            #extract the two relevant columns
+            # extract the two relevant columns
             predicted_intent = entry.predicted_intent.strip()
             context = entry.context.strip()
             if predicted_intent not in new_patterns_by_intent:
@@ -255,19 +300,18 @@ def update_intents():
             new_patterns_by_intent[predicted_intent].add(context)
             # append to file
 
-
         with open("chatbot/intents.json", "r") as file:
             intents = json.load(file)
 
         # Scan through the whole intents file (tag --> patterns)
-        for intent in intents['intents']:
+        for intent in intents["intents"]:
             # Found that tag within the new patterns to be added
-            if intent['tag'] in new_patterns_by_intent:
+            if intent["tag"] in new_patterns_by_intent:
                 # Loop through all Patterns for that intent
-                for pattern in new_patterns_by_intent[intent['tag']]:
+                for pattern in new_patterns_by_intent[intent["tag"]]:
                     # If no duplicate then add
-                    if pattern not in intent['patterns']:  
-                        intent['patterns'].append(pattern)
+                    if pattern not in intent["patterns"]:
+                        intent["patterns"].append(pattern)
 
         temp_file_path = "temp_intents.json"
         with open(temp_file_path, "w") as temp_file:
@@ -460,6 +504,28 @@ def get_cul_advice(dataset, found_keywords):
 
 # ------------------------------------------------------------
 
+
+# User API-----------------------------------------------------
+@app.route("/get_current_user")
+def getCurrentUser():
+    try:
+        user = User.query.filter_by(email=session["user_email"]).first()
+        if not user:
+            return "User not found."
+
+        return jsonify(
+            {
+                "user_id": user.id,
+                "username": user.username,
+                "user_type": user.user_type,
+                "user_email": user.email,
+            }
+        )
+    except Exception as e:
+        return f"An error occurred: {e}"
+
+
+# ----------------------------------------------------------------
 
 if __name__ == "__main__":
     app.run(debug=True)
