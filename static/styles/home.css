@@ -101,3 +101,45 @@ body {
   margin-top: 10px;
   color:#5C857C;
 }
+
+#notification-container {
+  position: fixed;
+  top: 10px;
+  right: 50%;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.notification {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  color: #fff;
+  font-size: 0.875rem;
+  opacity: 0;
+  transition: opacity 0.5s, transform 0.5s;
+  transform: translateY(-10px);
+}
+
+.notification.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.notification.success {
+  background-color: #A9E7D9;
+}
+
+.notification.error {
+  background-color: #f44336;
+}
+
+.notification .close-btn {
+  margin-left: 10px;
+  cursor: pointer;
+  font-weight: bold;
+}

@@ -7,10 +7,46 @@ document
     }
   });
 
+function showNotification(message, type = "success") {
+  const container = document.getElementById("notification-container");
+
+  // Create notification element
+  const notification = document.createElement("div");
+  notification.classList.add("notification", type);
+  notification.innerHTML = `
+      <span>${message}</span>
+      <span class="close-btn">&times;</span>
+    `;
+
+  // Append notification to container
+  container.appendChild(notification);
+
+  // Show notification
+  setTimeout(() => {
+    notification.classList.add("show");
+  }, 10);
+
+  // Remove notification after 3 seconds
+  setTimeout(() => {
+    notification.classList.remove("show");
+    setTimeout(() => {
+      container.removeChild(notification);
+    }, 500);
+  }, 3000);
+
+  // Add close button event
+  notification.querySelector(".close-btn").addEventListener("click", () => {
+    notification.classList.remove("show");
+    setTimeout(() => {
+      container.removeChild(notification);
+    }, 500);
+  });
+}
+
 let feedbackButtonAdded = false;
 
 function sendMessage() {
-  feedbackButtonAdded= false;
+  feedbackButtonAdded = false;
   var userInput = document.getElementById("user-input").value;
   const urlParts = window.location.pathname.split("/");
   sessionId = urlParts[urlParts.length - 1];
@@ -39,11 +75,11 @@ function sendMessage() {
 
       if (Array.isArray(data.bot_response)) {
         data?.bot_response
-          .filter(response => response && typeof response === 'string')
-          .forEach(response => {
+          .filter((response) => response && typeof response === "string")
+          .forEach((response) => {
             appendBotMessage(response);
           });
-      } else if (data?.bot_response && typeof data.bot_response === 'string') {
+      } else if (data?.bot_response && typeof data.bot_response === "string") {
         appendBotMessage(data.bot_response);
       }
       chatContainer.scrollTop = chatContainer.scrollHeight;
@@ -119,12 +155,15 @@ function handleFeedback(botMessageElement, response, type) {
         var feedbackContainer = botMessageElement.querySelector(
           ".feedback-container"
         );
+        showNotification("Thank you for your feedback!","success")
         feedbackContainer.style.display = "none";
       } else {
+        showNotification("Error in sending feedback","error");
         console.error("Error in sending feedback:", data.error);
       }
     })
     .catch((error) => {
+      showNotification("Error in sending feedback","error");
       console.error("Error sending feedback:", error);
     });
 }
