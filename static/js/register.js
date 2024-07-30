@@ -1,3 +1,40 @@
+function showNotification(message, type = 'success') {
+  const container = document.getElementById('notification-container');
+
+  // Create notification element
+  const notification = document.createElement('div');
+  notification.classList.add('notification', type);
+  notification.innerHTML = `
+    <span>${message}</span>
+    <span class="close-btn">&times;</span>
+  `;
+
+  // Append notification to container
+  container.appendChild(notification);
+
+  // Show notification
+  setTimeout(() => {
+    notification.classList.add('show');
+  }, 10);
+
+  // Remove notification after 3 seconds
+  setTimeout(() => {
+    notification.classList.remove('show');
+    setTimeout(() => {
+      container.removeChild(notification);
+    }, 500);
+  }, 3000);
+
+  // Add close button event
+  notification.querySelector('.close-btn').addEventListener('click', () => {
+    notification.classList.remove('show');
+    setTimeout(() => {
+      container.removeChild(notification);
+    }, 500);
+  });
+}
+
+
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.querySelector('form');
   
@@ -10,7 +47,7 @@ document.addEventListener('DOMContentLoaded', function () {
       const repeatPassword = form.querySelector('input[placeholder="Repeat your password"]').value;
   
       if (password !== repeatPassword) {
-        alert('Passwords do not match!');
+        showNotification('Passwords do not match!', 'error');
         return;
       }
   
@@ -29,11 +66,13 @@ document.addEventListener('DOMContentLoaded', function () {
       })
       .then(response => {
         if (!response.ok) {
+          showNotification('Error in Registration!', 'error');
           throw new Error('Network response was not ok ' + response.statusText);
         }
         return response.json();
       })
       .then(data => {
+        showNotification('Registration successful!', 'success');
         console.log('Success:', data);
         window.location.href = '/';
       })
@@ -42,4 +81,6 @@ document.addEventListener('DOMContentLoaded', function () {
       });
     });
   });
+
+
   

@@ -137,9 +137,9 @@ def train_model_RNN():
     model.compile(loss='categorical_crossentropy', optimizer="adam", metrics=['accuracy'])
 
     hist = model.fit(np.array(train_x), np.array(train_y), epochs=200, batch_size=5, verbose=1)
+
     model.save('modelN.keras', hist)
     print("model created")
-
 
 def predict_intent():
     import pandas as pd
@@ -192,7 +192,7 @@ def predict_intent():
     other_dataset_df.to_csv("dataset_with_predicted_intents.csv", index=False)
 
     # Visualize predicted intents
-    # predicted_intent_visualisation(other_dataset_df)
+    predicted_intent_visualisation(other_dataset_df)
 
 
 def preprocess_text(text):
@@ -217,23 +217,18 @@ def preprocess_text(text):
 
     # Iterate through tokens
     for token in text_tokens:
-        # Check if token is a negation term
         if token in NEGATION_TERMS:
-            # Toggle the negation flag
             negation_flag = not negation_flag
             continue
 
-        # If the current token is not negated, add it to the list of negated tokens
         if not negation_flag:
             negated_tokens.append(token)
         else:
             # Prefix the negated word with "not_"
             negated_tokens.append("not_" + token)
 
-    # Remove stopwords from negated tokens
     negated_tokens = [word for word in negated_tokens if word not in stop_words]
 
-    # Join the tokens back into a string
     processed_text = " ".join(negated_tokens)
 
     return processed_text
@@ -242,7 +237,6 @@ def preprocess_text(text):
 def predicted_intent_visualisation(df):
     unique_intents_count = df["predicted_intent"].nunique()
 
-    # Check for null values
     null_count = df["predicted_intent"].isnull().sum()
 
     print(f"Number of unique intents: {unique_intents_count}")
@@ -291,3 +285,5 @@ def keyword_extraction(text):
 # train_model_svm()
 predict_intent()
 # train_model_RNN()
+
+
